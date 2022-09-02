@@ -1,53 +1,46 @@
-from torchvision import models
-from torch import nn
-from torch.utils.data import DataLoader, Dataset
+import argparse
+import json
 from torchvision import transforms
+import pytorch_lightning as pl
 import torch
-import glob
+import torch.nn.functional as F
+import numpy as np
+from torch.utils.data import Dataset
+import os
 from PIL import Image
+from tqdm import tqdm
 
-deeplab = models.segmentation.deeplabv3_resnet50(pretrained=0,
-                                                 progress=1,
-                                                 num_classes=2)
-
-
-class HandSegModel(nn.Module):
-    def __init__(self):
-        super(HandSegModel, self).__init__()
-        self.dl = deeplab
-
-    def forward(self, x):
-        y = self.dl(x)['out']
-        return y
+# Custom
+from model import HandSegModel
+from dataloader import get_dataloader, show_samples, Denorm
 
 
-class SegDataset(Dataset):
-
-    def __init__(self, parentDir, imageDir, maskDir):
-        self.imageList = glob.glob(parentDir + '/' + imageDir + '/*')
-        self.imageList.sort()
-        self.maskList = glob.glob(parentDir + '/' + maskDir + '/*')
-        self.maskList.sort()
-
-    def __getitem__(self, index):
-        preprocess = transforms.Compose([
-            transforms.Resize((384, 288)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-
-        X = Image.open(self.imageList[index]).convert('RGB')
-        X = preprocess(X)
-
-        trfresize = transforms.Resize((384, 288))
-        trftensor = transforms.ToTensor()
-
-        yimg = Image.open(self.maskList[index]).convert('L')
-        y1 = trftensor(trfresize(yimg))
-        y1 = y1.type(torch.BoolTensor)
-        y2 = torch.bitwise_not(y1)
-        y = torch.cat([y2, y1], dim=0)
-
-        return X, y
-
-    def __len__(self):
-        return len(self.imageList)
+def get_dataloaders(args):
+    image_transform = transforms.Compose([
+        transforms.Resize((args.height, args.width)),
+        transforms.ToTensor(),
+        lambda x: x if x.shape[0] == 3 else x.repeat(3, 1, 1),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    mask_transform = transforms.Compose([
+        transforms.Resize((args.height, args.width)),
+        transforms.ToTensor(),
+        lambda m: torch.where(m > 0, torch.ones_like(m), torch.zeros_like(m)),
+        lambda m: F.one_hot(m[0].to(torch.int64), 2).permute(2, 0, 1).to(torch.float32),
+    ])
+    dl_args = {
+        'data_base_path': args.data_base_path,
+        'datasets': args.datasets.split(' '),
+        'image_transform': image_transform,
+        'mask_transform': mask_transform,
+        'batch_size': args.batch_size,
+    }
+    dl_train = get_dataloader(**dl_args, partition='train', shuffle=True)
+    dl_validation = get_dataloader(**dl_args, partition='validation', shuffle=False)
+    dl_test = get_dataloader(**dl_args, partition='test', shuffle=False)
+    dls = {
+        'train': dl_train,
+        'validation': dl_validation,
+        'test': dl_test,
+    }
+    return dls
