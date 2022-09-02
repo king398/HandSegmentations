@@ -1,0 +1,195 @@
+%! Author = mithil
+%! Date = 8/27/22
+
+% Preamble
+
+%! Author = mithil
+%! Date = 8/27/22
+
+% Preamble
+\documentclass[14pt]{extarticle}
+
+
+% Packages
+\usepackage[final]{graphicx}
+\usepackage{subcaption}
+\usepackage{moresize}
+\usepackage{float}
+\usepackage{lipsum}
+\usepackage[a4paper, total={7in, 9in}]{geometry}
+\usepackage{hyperref}
+\usepackage{abstract}
+\usepackage{blindtext}
+\usepackage{amsmath}
+\usepackage{hologo}
+\usepackage{multicol}
+\usepackage[symbol]{footmisc}
+\usepackage[compact]{titlesec}         % you need this package
+\titlespacing{\section}{0pt}{0pt}{0pt} % this reduces space between (sub)sections to 0pt, for example
+\AtBeginDocument{%                     % this will reduce spaces between parts (above and below) of texts within a (sub)section to 0pt, for example - like between an 'eqnarray' and text
+    \setlength\abovedisplayskip{0pt}
+    \setlength\belowdisplayskip{0pt}}
+\setlength{\absleftindent}{0mm}
+\setlength{\absrightindent}{0mm}
+\setlength{\columnsep}{0.5cm}
+\renewcommand{\thesubfigure}{\arabic{subfigure}}
+\graphicspath{ {//home/mithil/PycharmProjects/HandWriting/}}
+\newenvironment{Figure}
+{\par\medskip\noindent\minipage{\linewidth}}
+{\endminipage\par\medskip}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\vspace{-3mm}
+
+% Document
+\begin{document}
+    \title{Sign Language Detection Using Artificial Intelligence}
+    \author{Mithil Salunkhe\\10B   \and Parth Kapuskari\\10B \and Ronit Subhedar\\10B}
+
+    \maketitle
+    \begin{multicols}{2}
+
+
+        \section{Introduction} \label{sec:introduction}
+
+        \subsection{Need for Sign Language Detection Using Artificial Intelligence}\label{subsec:Sign}
+        More than 70 million people in the world suffer from complete hearing loss.
+        The Only way for these people to communicate in there day-to-day life is by using sign language.
+        Unfortunately, Only 1 percent of the world population knows how to communicate with sign language.
+        Many people simply do not have the time to learn how to communicate with sign language.
+        This makes it difficult for deaf people to communicate, making the goal of inclusivity hard to achieve.
+
+        \subsection{A novel way to solve the problem}\label{subsec:approach}
+        Artificial Intelligence has made huge strides in recent years.
+        From Cancer Detection to Generating Art, Artificial Intelligence
+        is perhaps our best way to save time of people and achieve the goal of inclusivity.
+        We Propose a novel end-to-end solution for making this a reality which involves the following steps \footnote{Further Description Of the steps is given in~\nameref{sec:approach} }
+        \begin{itemize}
+
+            \item Capturing the input from the Camera~\footnote{\nameref{subsec:Camera}}
+            \item Segmentation of the hand from the background~\footnote{\nameref{subsec:Segmentation}}
+            \item Classification of the hand gesture~\footnote{\nameref{subsec:Classification}}
+        \end{itemize}
+
+
+        \section{Approach} \label{sec:approach}
+
+        \subsection{Capturing the input from the Camera}\label{subsec:Camera}
+        We First get the image from a camera , which is then resized and done augmentations on.
+        We use a package called opencv to do this, helping us capture live camera feed in frames which are then feed to
+        a segmentation model.
+        \begin{figure}[H]
+            \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \subfloat[Example of a raw image which is captured in the camera]{\includegraphics[width=8cm, height=5cm]{105.jpg}}\label{fig:1}
+
+                \label{fig:Figure 1}
+                % label the figure
+            \end{subfigure}
+
+        \end{figure}
+
+        \subsection{Segmentation of the hand from the background}\label{subsec:Segmentation}
+        Segmentation is the process in the which objects are seperated from the background, which in our case here is
+        being used to improve accuracy of the model and for generalizing.
+        Segmentation here is done using an Unet model.The model consists of a contracting path to capture
+        context and a symmetric expanding path that enables precise localization ie an encoder decoder architecture.
+        We Get the model from segmentation-models-pytorch, a library consisting of many unet like models and backbones.
+        The removal of the background helps the model not over fit , helping the model to work irrespective of the
+        background.
+
+
+
+
+
+        \begin{figure}[H]
+            \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+                \subfloat[Example Image]{\includegraphics[width=8cm, height=5cm]{000005_image.png}}\label{fig:2}
+                \subfloat[Example of a segmentation mask generated from an image]{\includegraphics[width=8cm, height=5cm]{000005.png}}\label{fig:3}
+
+                \label{fig:Figure 2}
+                % label the figure
+            \end{subfigure}
+
+        \end{figure}
+
+        \subsection{Classification of the hand}\label{subsec:Classification}
+        Classification is the main part of our end to end sign language detection pipeline.It is a non-trivial problem
+        in this context,because of  29 classes present in the dataset.Our task is made easier by the additional step
+        of Segmentation, which helps reduce the chance of model overfitting to the background.But the problems of noisy
+        data and different hand shades is hard one to solve.To combat we use data augmentations like Random Contrast And
+        Random Brightness.We also use a Convolution Neural Network called efficientnet b0, which gives us both, fast inference
+        speed and highly accuracy and confident result.EfficientNet B0,A recent state-of-the-art model,achieves much better accuracy and efficiency than previous ConvNets.
+        CNNs use relatively little pre-processing compared to other image classification algorithms.
+        This means that the network learns to optimize the filters (or kernels) through automated learning, whereas in
+        traditional algorithms these filters are hand-engineered.
+        This independence from prior knowledge and human intervention in feature extraction is a major advantage.
+
+        We achieve 97 percent accuracy on our testing dataset which is considered
+        excellent accuracy for a real word application.
+        \begin{figure}[H]
+            \begin{subfigure}[b]{0.5\textwidth}
+                \centering
+
+
+
+                \label{fig:Figure 5}
+                % label the figure
+            \end{subfigure}
+
+        \end{figure}
+    \end{multicols}
+    \begin{figure}[H]
+        \begin{subfigure}[b]{0.5\textwidth}
+            \centering            \subfloat[Unet architecture]{\includegraphics[width=18cm, height=12cm]{img.png}}\label{fig:4}
+
+
+            \label{fig:Figure 3}
+            % label the figure
+        \end{subfigure}
+
+    \end{figure}
+    \begin{figure}[H]
+        \begin{subfigure}[b]{0.5\textwidth}
+            \subfloat[efficientnet b0 architecture ]{\includegraphics[width=18cm, height=15cm]{Screen_Shot_2020-06-06_at_10.45.54_PM.png}}\label{fig:7}
+
+
+            \label{fig:Figure 8}
+            % label the figure
+        \end{subfigure}
+
+    \end{figure}
+
+
+    Important libraries we used in our project are.
+    \begin{multicols}{2}
+
+        \section{Appendix}\label{sec:Appendix}
+
+        \subsection{Libraries used}\label{subsec:libraries}
+        \begin{itemize}
+
+            \item  Pytorch - It is the most used package in our pipeline.
+            Pytorch is the leading deep learning library used by researchers around the world.
+            Pytorch is selected for its ease of scalability,fast inference time and for its more pythonic approach making it
+            easy to integrate others useful library in our pipeline.
+            \item Segmentation Models Pytorch And TIMM - Both of these library are where we get our models from.
+            Segmentation Models Pytorch is from where we get our Segmentation Models from while TIMM is where we get our classifications models from.
+            \item Opencv - Opencv is a computer vision library which helps us load images for training and helps us get our camera feed
+            \item Miscellaneous - sklearn , albumentations , glob
+        \end{itemize}
+
+        \subsection{Dataset used}\label{subsec:Dataset}
+        Credits to the dataset we used to train our models.
+        \begin{itemize}
+
+            \item \emph{https://www.kaggle.com/datasets/unfriendlyai/rucode-hand-segmentation} : Segmentation Dataset
+            \item \emph{https://www.kaggle.com/datasets/debashishsau/aslamerican-sign-language-aplhabet-dataset} : Classification Dataset
+        \end{itemize}
+
+
+    \end{multicols}
+    Made Using \LaTeX{}
+
+
+\end{document}
